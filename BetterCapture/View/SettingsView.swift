@@ -13,22 +13,23 @@ import SwiftUI
 struct SettingsView: View {
     @Bindable var settings: SettingsStore
     var updaterService: UpdaterService
+    @Environment(\.appLanguage) private var appLanguage
 
     var body: some View {
         TabView {
-            Tab("General", systemImage: "gearshape") {
+            Tab(L10n.text("tab.general", language: appLanguage), systemImage: "gearshape") {
                 GeneralSettingsView(settings: settings, updaterService: updaterService)
             }
 
-            Tab("Video", systemImage: "video") {
+            Tab(L10n.text("tab.video", language: appLanguage), systemImage: "video") {
                 VideoSettingsView(settings: settings)
             }
 
-            Tab("Audio", systemImage: "waveform") {
+            Tab(L10n.text("tab.audio", language: appLanguage), systemImage: "waveform") {
                 AudioSettingsView(settings: settings)
             }
 
-            Tab("Shortcuts", systemImage: "keyboard") {
+            Tab(L10n.text("tab.shortcuts", language: appLanguage), systemImage: "keyboard") {
                 ShortcutsSettingsView()
             }
         }
@@ -39,19 +40,21 @@ struct SettingsView: View {
 // MARK: - Shortcuts Settings
 
 struct ShortcutsSettingsView: View {
+    @Environment(\.appLanguage) private var appLanguage
+
     var body: some View {
         Form {
-            Section("Recording") {
-                KeyboardShortcuts.Recorder("Toggle Recording", name: .toggleRecording)
+            Section(L10n.text("section.recording", language: appLanguage)) {
+                KeyboardShortcuts.Recorder(L10n.text("shortcut.toggleRecording", language: appLanguage), name: .toggleRecording)
             }
 
-            Section("Content Selection") {
-                KeyboardShortcuts.Recorder("Select Content", name: .selectContent)
-                KeyboardShortcuts.Recorder("Select Area", name: .selectArea)
+            Section(L10n.text("section.contentSelection", language: appLanguage)) {
+                KeyboardShortcuts.Recorder(L10n.text("shortcut.selectContent", language: appLanguage), name: .selectContent)
+                KeyboardShortcuts.Recorder(L10n.text("shortcut.selectArea", language: appLanguage), name: .selectArea)
             }
 
             Section {
-                Text("Shortcuts work globally, even when BetterCapture is not focused.")
+                Text(L10n.text("help.shortcutsGlobal", language: appLanguage))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -65,100 +68,105 @@ struct ShortcutsSettingsView: View {
 
 struct VideoSettingsView: View {
     @Bindable var settings: SettingsStore
+    @Environment(\.appLanguage) private var appLanguage
 
     private var alphaChannelHelpText: String {
         switch settings.videoCodec {
         case .proRes4444:
-            return "ProRes 4444 always includes alpha channel support"
+            return L10n.text("help.alpha.proRes4444", language: appLanguage)
         case .hevc:
-            return "Enable transparency support for HEVC"
+            return L10n.text("help.alpha.hevc", language: appLanguage)
         case .h264, .proRes422:
-            return "Alpha channel not supported by this codec"
+            return L10n.text("help.alpha.unsupported", language: appLanguage)
         }
     }
 
     private var hdrHelpText: String {
         if settings.videoCodec.supportsHDR {
-            return "Enable 10-bit HDR capture for high dynamic range content"
+            return L10n.text("help.hdr.supported", language: appLanguage)
         } else {
-            return "HDR is only supported with ProRes 422 and ProRes 4444 codecs"
+            return L10n.text("help.hdr.unsupported", language: appLanguage)
         }
     }
 
     private var qualityHelpText: String {
         if settings.videoCodec.supportsQualitySetting {
-            return "Controls the video bitrate. Higher quality produces sharper output with larger files"
+            return L10n.text("help.quality.supported", language: appLanguage)
         } else {
-            return "ProRes codecs use fixed-quality encoding"
+            return L10n.text("help.quality.unsupported", language: appLanguage)
         }
     }
 
-    private let captureNativeResHelpText = """
-        When enabled, captures at the display's native pixel resolution. \
-        When disabled, captures at the logical (1x) resolution. Has no effect on non-Retina displays
-        """
+    private var captureNativeResHelpText: String {
+        L10n.text("help.nativeResolution", language: appLanguage)
+    }
 
     var body: some View {
         Form {
-            Section("Recording") {
-                Picker("Frame Rate", selection: $settings.frameRate) {
+            Section(L10n.text("section.recording", language: appLanguage)) {
+                Picker(L10n.text("setting.frameRate", language: appLanguage), selection: $settings.frameRate) {
                     ForEach(FrameRate.allCases) { rate in
-                        Text(rate.displayName).tag(rate)
+                        Text(rate.displayName(language: appLanguage)).tag(rate)
                     }
                 }
 
-                Picker("Codec", selection: $settings.videoCodec) {
+                Picker(L10n.text("setting.codec", language: appLanguage), selection: $settings.videoCodec) {
                     ForEach(VideoCodec.allCases) { codec in
                         let isSupported = settings.containerFormat.supportedVideoCodecs.contains(codec)
                         if isSupported {
                             Text(codec.rawValue).tag(codec)
                         } else {
-                            Text("\(codec.rawValue) (not supported for \(settings.containerFormat.rawValue.uppercased()))")
+                            Text(L10n.text(
+                                "value.codecNotSupportedForFormat",
+                                language: appLanguage,
+                                codec.rawValue,
+                                settings.containerFormat.rawValue.uppercased()
+                            ))
                                 .foregroundStyle(.secondary)
                                 .tag(codec)
                         }
                     }
                 }
 
-                Picker("Container", selection: $settings.containerFormat) {
+                Picker(L10n.text("setting.container", language: appLanguage), selection: $settings.containerFormat) {
                     ForEach(ContainerFormat.allCases) { format in
                         Text(".\(format.rawValue)").tag(format)
                     }
                 }
 
-                Picker("Quality", selection: $settings.videoQuality) {
+                Picker(L10n.text("setting.quality", language: appLanguage), selection: $settings.videoQuality) {
                     ForEach(VideoQuality.allCases) { quality in
-                        Text(quality.rawValue).tag(quality)
+                        Text(quality.displayName(language: appLanguage)).tag(quality)
                     }
                 }
                 .disabled(!settings.videoCodec.supportsQualitySetting)
                 .help(qualityHelpText)
             }
 
-            Section("Advanced") {
-                Toggle("Capture Alpha Channel", isOn: $settings.captureAlphaChannel)
+            Section(L10n.text("section.advanced", language: appLanguage)) {
+                Toggle(L10n.text("setting.captureAlphaChannel", language: appLanguage), isOn: $settings.captureAlphaChannel)
                     .disabled(!settings.videoCodec.canToggleAlpha || !settings.containerFormat.supportsAlphaChannel)
                     .help(alphaChannelHelpText)
 
-                Toggle("HDR Recording", isOn: $settings.captureHDR)
+                Toggle(L10n.text("setting.hdrRecording", language: appLanguage), isOn: $settings.captureHDR)
                     .disabled(!settings.videoCodec.supportsHDR)
                     .help(hdrHelpText)
 
-                Toggle("Native Resolution", isOn: $settings.captureNativeResolution)
+                Toggle(L10n.text("setting.nativeResolution", language: appLanguage), isOn: $settings.captureNativeResolution)
                     .help(captureNativeResHelpText)
             }
 
-            Section("Display Elements") {
-                Toggle("Show Cursor", isOn: $settings.showCursor)
-                Toggle("Show Wallpaper", isOn: $settings.showWallpaper)
-                Toggle("Show Menu Bar", isOn: $settings.showMenuBar)
-                Toggle("Show Dock", isOn: $settings.showDock)
-                Toggle("Show BetterCapture", isOn: $settings.showBetterCapture)
+            Section(L10n.text("section.displayElements", language: appLanguage)) {
+                Toggle(L10n.text("setting.showCursor", language: appLanguage), isOn: $settings.showCursor)
+                Toggle(L10n.text("setting.showWallpaper", language: appLanguage), isOn: $settings.showWallpaper)
+                Toggle(L10n.text("setting.showMenuBar", language: appLanguage), isOn: $settings.showMenuBar)
+                Toggle(L10n.text("setting.showDock", language: appLanguage), isOn: $settings.showDock)
+                Toggle(L10n.text("setting.showBetterCapture", language: appLanguage), isOn: $settings.showBetterCapture)
             }
 
-            Section("Window Capture") {
-                Toggle("Show Window Shadows", isOn: $settings.showWindowShadows)
-                    .help("Include window shadows when capturing individual windows")
+            Section(L10n.text("section.windowCapture", language: appLanguage)) {
+                Toggle(L10n.text("setting.showWindowShadows", language: appLanguage), isOn: $settings.showWindowShadows)
+                    .help(L10n.text("help.windowShadows", language: appLanguage))
             }
         }
         .formStyle(.grouped)
@@ -170,35 +178,41 @@ struct VideoSettingsView: View {
 
 struct AudioSettingsView: View {
     @Bindable var settings: SettingsStore
+    @Environment(\.appLanguage) private var appLanguage
 
     var body: some View {
         Form {
-            Section("Sources") {
-                Toggle("Capture System Audio", isOn: $settings.captureSystemAudio)
-                    .help("Record audio from applications and system sounds")
+            Section(L10n.text("section.sources", language: appLanguage)) {
+                Toggle(L10n.text("setting.captureSystemAudio", language: appLanguage), isOn: $settings.captureSystemAudio)
+                    .help(L10n.text("help.captureSystemAudio", language: appLanguage))
 
-                Toggle("Capture Microphone", isOn: $settings.captureMicrophone)
-                    .help("Record audio from the default microphone input")
+                Toggle(L10n.text("setting.captureMicrophone", language: appLanguage), isOn: $settings.captureMicrophone)
+                    .help(L10n.text("help.captureMicrophone", language: appLanguage))
             }
 
-            Section("Format") {
-                Picker("Codec", selection: $settings.audioCodec) {
+            Section(L10n.text("section.format", language: appLanguage)) {
+                Picker(L10n.text("setting.codec", language: appLanguage), selection: $settings.audioCodec) {
                     ForEach(AudioCodec.allCases) { codec in
                         let isSupported = settings.containerFormat.supportedAudioCodecs.contains(codec)
                         if isSupported {
                             Text(codec.rawValue).tag(codec)
                         } else {
-                            Text("\(codec.rawValue) (not supported for \(settings.containerFormat.rawValue.uppercased()))")
+                            Text(L10n.text(
+                                "value.codecNotSupportedForFormat",
+                                language: appLanguage,
+                                codec.rawValue,
+                                settings.containerFormat.rawValue.uppercased()
+                            ))
                                 .foregroundStyle(.secondary)
                                 .tag(codec)
                         }
                     }
                 }
-                .help("AAC is compressed, PCM is uncompressed lossless (MOV only)")
+                .help(L10n.text("help.audioCodec", language: appLanguage))
             }
 
             Section {
-                Text("Audio tracks are recorded separately for post-processing flexibility.")
+                Text(L10n.text("help.audioTracks", language: appLanguage))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -213,6 +227,7 @@ struct AudioSettingsView: View {
 struct GeneralSettingsView: View {
     @Bindable var settings: SettingsStore
     var updaterService: UpdaterService
+    @Environment(\.appLanguage) private var appLanguage
 
     @State private var automaticallyChecksForUpdates: Bool
 
@@ -235,15 +250,21 @@ struct GeneralSettingsView: View {
 
     var body: some View {
         Form {
-            Section("Output Location") {
+            Section(L10n.text("section.outputLocation", language: appLanguage)) {
+                Picker(L10n.text("setting.language", language: appLanguage), selection: $settings.appLanguage) {
+                    ForEach(AppLanguage.allCases) { language in
+                        Text(language.displayName(language: appLanguage)).tag(language)
+                    }
+                }
+
                 LabeledContent {
                     HStack {
-                        Button("Change...") {
+                        Button(L10n.text("action.change", language: appLanguage)) {
                             selectOutputDirectory()
                         }
 
                         if settings.hasCustomOutputDirectory {
-                            Button("Reset", role: .destructive) {
+                            Button(L10n.text("action.reset", language: appLanguage), role: .destructive) {
                                 settings.resetOutputDirectory()
                             }
                         }
@@ -259,14 +280,14 @@ struct GeneralSettingsView: View {
                 }
             }
 
-            Section("Software Updates") {
-                Toggle("Automatically check for updates", isOn: $automaticallyChecksForUpdates)
+            Section(L10n.text("section.softwareUpdates", language: appLanguage)) {
+                Toggle(L10n.text("setting.automaticallyCheckForUpdates", language: appLanguage), isOn: $automaticallyChecksForUpdates)
                     .onChange(of: automaticallyChecksForUpdates) { _, newValue in
                         updaterService.automaticallyChecksForUpdates = newValue
                     }
 
-                LabeledContent("Updates") {
-                    Button("Check for Update") {
+                LabeledContent(L10n.text("setting.updates", language: appLanguage)) {
+                    Button(L10n.text("action.checkForUpdate", language: appLanguage)) {
                         updaterService.checkForUpdates()
                     }
                     .disabled(!updaterService.canCheckForUpdates)
@@ -282,8 +303,8 @@ struct GeneralSettingsView: View {
     /// Opens an NSOpenPanel to select a custom output directory
     private func selectOutputDirectory() {
         let panel = NSOpenPanel()
-        panel.title = "Select Output Directory"
-        panel.message = "Choose where recordings will be saved"
+        panel.title = L10n.text("dialog.selectOutputDirectory.title", language: appLanguage)
+        panel.message = L10n.text("dialog.selectOutputDirectory.message", language: appLanguage)
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
         panel.canCreateDirectories = true
@@ -299,6 +320,8 @@ struct GeneralSettingsView: View {
 // MARK: - About Section
 
 struct AboutSection: View {
+    @Environment(\.appLanguage) private var appLanguage
+
     private var appVersion: String {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown"
     }
@@ -308,14 +331,14 @@ struct AboutSection: View {
     }
 
     var body: some View {
-        Section("About") {
-            LabeledContent("Version", value: "v\(appVersion) (\(gitSHA))")
+        Section(L10n.text("section.about", language: appLanguage)) {
+            LabeledContent(L10n.text("about.version", language: appLanguage), value: "v\(appVersion) (\(gitSHA))")
 
-            LabeledContent("Website") {
+            LabeledContent(L10n.text("about.website", language: appLanguage)) {
                 Link("jsattler.github.io/BetterCapture", destination: URL(string: "https://jsattler.github.io/BetterCapture")!)
             }
 
-            LabeledContent("Source Code") {
+            LabeledContent(L10n.text("about.sourceCode", language: appLanguage)) {
                 Link("github.com/jsattler/BetterCapture", destination: URL(string: "https://github.com/jsattler/BetterCapture")!)
             }
         }

@@ -249,6 +249,17 @@ final class SettingsStore {
         self.defaults = defaults
     }
 
+    // MARK: - App Settings
+
+    var appLanguage: AppLanguage {
+        get {
+            AppLanguage(rawValue: appLanguageRaw) ?? .system
+        }
+        set {
+            appLanguageRaw = newValue.rawValue
+        }
+    }
+
     // MARK: - Video Settings
 
     var frameRate: FrameRate {
@@ -727,6 +738,18 @@ final class SettingsStore {
         set {
             withMutation(keyPath: \.audioCodecRaw) {
                 defaults.set(newValue, forKey: "audioCodec")
+            }
+        }
+    }
+
+    private var appLanguageRaw: String {
+        get {
+            access(keyPath: \.appLanguageRaw)
+            return defaults.string(forKey: AppLanguage.storageKey) ?? AppLanguage.system.rawValue
+        }
+        set {
+            withMutation(keyPath: \.appLanguageRaw) {
+                defaults.set(newValue, forKey: AppLanguage.storageKey)
             }
         }
     }

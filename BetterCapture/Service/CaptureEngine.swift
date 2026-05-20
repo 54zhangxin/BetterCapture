@@ -195,18 +195,12 @@ final class CaptureEngine: NSObject {
 
         switch settings.hdrPreset {
         case .hdr10PreservedSDR:
-            if #available(macOS 26, *) {
-                config = SCStreamConfiguration(preset: .captureHDRRecordingPreservedSDRHDR10)
-            } else {
-                // Unreachable — hdrPreset only returns .hdr10PreservedSDR on macOS 26+
-                config = SCStreamConfiguration()
-            }
-            // Only override pixel format for ProRes, which needs different
-            // chroma subsampling (4:2:2 / 16-bit RGBA). For HEVC, let the
-            // preset's own pixel format stand to preserve EDR headroom.
-            if settings.videoCodec == .proRes422 || settings.videoCodec == .proRes4444 {
-                config.pixelFormat = settings.videoCodec.hdrPixelFormat
-            }
+            // The macOS 26 HDR preset is only available when building with the
+            // newer SDK. Use the manual HDR10-equivalent configuration so the
+            // project also builds with the macOS 15 SDK bundled in current Xcode.
+            config = SCStreamConfiguration()
+            config.captureDynamicRange = .hdrCanonicalDisplay
+            config.pixelFormat = settings.videoCodec.hdrPixelFormat
 
         case .hdr10Manual:
             // Manually replicate the HDR10 recording preset for pre-macOS 26.

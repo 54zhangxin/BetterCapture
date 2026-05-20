@@ -12,6 +12,7 @@ import SwiftUI
 struct RecordingOverlayView: View {
     let viewModel: RecorderViewModel
     let onDismiss: () -> Void
+    @Environment(\.appLanguage) private var appLanguage
 
     @State private var currentPreview: NSImage?
 
@@ -53,7 +54,7 @@ struct RecordingOverlayView: View {
                 VStack {
                     HStack {
                         Spacer()
-                        Text("LIVE")
+                        Text(L10n.text("status.live", language: appLanguage))
                             .font(.system(size: 9, weight: .bold))
                             .foregroundStyle(.white)
                             .padding(.horizontal, 6)
@@ -73,14 +74,14 @@ struct RecordingOverlayView: View {
 
     private var buttonRow: some View {
         VStack(spacing: 6) {
-            Button("Start Recording", systemImage: "record.circle") {
+            Button(L10n.text("action.startRecording", language: appLanguage), systemImage: "record.circle") {
                 Task {
                     await viewModel.startRecording()
                 }
             }
             .buttonStyle(OverlayButtonStyle(labelColor: .green, weight: .semibold))
 
-            Button("Dismiss") {
+            Button(L10n.text("action.dismiss", language: appLanguage)) {
                 onDismiss()
             }
             .buttonStyle(OverlayButtonStyle(labelColor: .secondary, weight: .medium))

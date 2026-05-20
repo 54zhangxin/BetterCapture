@@ -23,8 +23,10 @@ enum ContentSelectionMode: String {
 
     var label: String {
         switch self {
-        case .pickContent: "Pick Content"
-        case .selectArea: "Select Area"
+        case .pickContent:
+            L10n.text("shortcut.selectContent")
+        case .selectArea:
+            L10n.text("shortcut.selectArea")
         }
     }
 

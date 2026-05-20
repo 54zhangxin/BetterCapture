@@ -484,13 +484,13 @@ final class AreaSelectionView: NSView {
         let container = NSView()
 
         let confirm = makeActionButton(
-            title: "Confirm",
+            title: L10n.text("action.confirm"),
             textColor: .systemGreen,
             action: #selector(confirmButtonClicked)
         )
 
         let cancel = makeActionButton(
-            title: "Cancel",
+            title: L10n.text("action.cancel"),
             textColor: .systemRed,
             action: #selector(cancelButtonClicked)
         )

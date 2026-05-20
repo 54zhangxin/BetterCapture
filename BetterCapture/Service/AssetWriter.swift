@@ -16,6 +16,35 @@ import os
 /// Service responsible for writing captured media to disk using AVAssetWriter
 final class AssetWriter: CaptureEngineSampleBufferDelegate, @unchecked Sendable {
 
+    /// Immutable recording settings captured on the main actor before sample
+    /// buffers start arriving on ScreenCaptureKit queues.
+    private struct SettingsSnapshot {
+        let containerFormat: ContainerFormat
+        let videoCodec: VideoCodec
+        let videoQuality: VideoQuality
+        let frameRate: FrameRate
+        let captureAlphaChannel: Bool
+        let captureHDR: Bool
+        let captureSystemAudio: Bool
+        let captureMicrophone: Bool
+        let audioCodec: AudioCodec
+        let hdrPreset: HDRPreset
+
+        @MainActor
+        init(settings: SettingsStore) {
+            self.containerFormat = settings.containerFormat
+            self.videoCodec = settings.videoCodec
+            self.videoQuality = settings.videoQuality
+            self.frameRate = settings.frameRate
+            self.captureAlphaChannel = settings.captureAlphaChannel
+            self.captureHDR = settings.captureHDR
+            self.captureSystemAudio = settings.captureSystemAudio
+            self.captureMicrophone = settings.captureMicrophone
+            self.audioCodec = settings.audioCodec
+            self.hdrPreset = settings.hdrPreset
+        }
+    }
+
     // MARK: - Properties
 
     private var assetWriter: AVAssetWriter?
@@ -57,7 +86,10 @@ final class AssetWriter: CaptureEngineSampleBufferDelegate, @unchecked Sendable 
     ///   - url: The output file URL
     ///   - settings: The settings store containing encoding configuration
     ///   - videoSize: The dimensions of the video
+    @MainActor
     func setup(url: URL, settings: SettingsStore, videoSize: CGSize) throws {
+        let settings = SettingsSnapshot(settings: settings)
+
         // Ensure output directory exists
         let directory = url.deletingLastPathComponent()
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
@@ -393,7 +425,7 @@ final class AssetWriter: CaptureEngineSampleBufferDelegate, @unchecked Sendable 
 
     // MARK: - Settings Helpers
 
-    private func createVideoSettings(from settings: SettingsStore, size: CGSize) -> [String: Any] {
+    private func createVideoSettings(from settings: SettingsSnapshot, size: CGSize) -> [String: Any] {
         var videoSettings: [String: Any] = [
             AVVideoWidthKey: Int(size.width),
             AVVideoHeightKey: Int(size.height)
@@ -516,7 +548,7 @@ final class AssetWriter: CaptureEngineSampleBufferDelegate, @unchecked Sendable 
         )
     }
 
-    private func createAudioSettings(from settings: SettingsStore) -> [String: Any] {
+    private func createAudioSettings(from settings: SettingsSnapshot) -> [String: Any] {
         switch settings.audioCodec {
         case .aac:
             return [

@@ -12,6 +12,11 @@ import SwiftUI
 struct BetterCaptureApp: App {
     @State private var viewModel = RecorderViewModel()
     @State private var updaterService = UpdaterService()
+
+    private var resolvedAppLanguage: SupportedAppLanguage {
+        viewModel.settings.appLanguage.resolved
+    }
+
     var body: some Scene {
         // Menu bar extra - the primary interface
         // Using .window style to support custom toggle switches
@@ -21,6 +26,8 @@ struct BetterCaptureApp: App {
                     await viewModel.requestPermissionsOnLaunch()
                     registerKeyboardShortcuts()
                 }
+                .environment(\.locale, viewModel.settings.appLanguage.locale)
+                .environment(\.appLanguage, resolvedAppLanguage)
         } label: {
             MenuBarLabel(viewModel: viewModel)
         }
@@ -29,6 +36,8 @@ struct BetterCaptureApp: App {
         // Settings window
         Settings {
             SettingsView(settings: viewModel.settings, updaterService: updaterService)
+                .environment(\.locale, viewModel.settings.appLanguage.locale)
+                .environment(\.appLanguage, resolvedAppLanguage)
         }
     }
 

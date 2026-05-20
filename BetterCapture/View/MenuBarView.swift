@@ -11,6 +11,7 @@ import ScreenCaptureKit
 /// The main menu bar interface for BetterCapture
 struct MenuBarView: View {
     @Bindable var viewModel: RecorderViewModel
+    @Environment(\.appLanguage) private var appLanguage
     @Environment(\.openSettings) private var openSettings
     @Environment(\.dismiss) private var dismiss
     @State private var currentPreview: NSImage?
@@ -42,7 +43,7 @@ struct MenuBarView: View {
                 .padding(.top, 8)
             } else {
                 MenuBarActionButton(
-                    title: "Start Recording",
+                    title: L10n.text("action.startRecording", language: appLanguage),
                     systemImage: "record.circle",
                     accentColor: .green,
                     isDisabled: !viewModel.canStartRecording
@@ -89,7 +90,7 @@ struct MenuBarView: View {
                         await viewModel.resetAreaSelection()
                     }
                 } label: {
-                    Text("Reset Selection")
+                    Text(L10n.text("action.resetSelection", language: appLanguage))
                         .font(.system(size: 13, weight: .medium))
                         .foregroundStyle(.red)
                         .frame(maxWidth: .infinity)
@@ -122,7 +123,7 @@ struct MenuBarView: View {
             MenuBarDivider()
 
             // Bottom Actions
-            MenuBarActionButton(title: "Open Output Folder", systemImage: "folder") {
+            MenuBarActionButton(title: L10n.text("action.openOutputFolder", language: appLanguage), systemImage: "folder") {
                 let settings = viewModel.settings
                 let didStart = settings.startAccessingOutputDirectory()
                 defer {
@@ -133,12 +134,12 @@ struct MenuBarView: View {
                 NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: settings.outputDirectory.path)
             }
 
-            MenuBarActionButton(title: "Settings...", systemImage: "gear") {
+            MenuBarActionButton(title: L10n.text("action.settings", language: appLanguage), systemImage: "gear") {
                 NSApplication.shared.activate(ignoringOtherApps: true)
                 openSettings()
             }
 
-            MenuBarActionButton(title: "Quit...", systemImage: "power") {
+            MenuBarActionButton(title: L10n.text("action.quit", language: appLanguage), systemImage: "power") {
                 NSApplication.shared.terminate(nil)
             }
             .padding(.bottom, 8)
@@ -200,6 +201,7 @@ struct MenuBarActionButton: View {
 /// A combined button that shows recording status and allows stopping
 struct RecordingButton: View {
     let duration: String
+    @Environment(\.appLanguage) private var appLanguage
     let action: () -> Void
     @State private var isHovered = false
 
@@ -217,7 +219,7 @@ struct RecordingButton: View {
                         .foregroundStyle(.red.opacity(0.8))
                 }
 
-                Text("Stop Recording")
+                Text(L10n.text("action.stopRecording", language: appLanguage))
                     .font(.system(size: 13, weight: .semibold))
 
                 Spacer()
@@ -251,6 +253,7 @@ struct ContentSelectionButton: View {
     let viewModel: RecorderViewModel
     var onDismissPanel: (() -> Void)?
     @AppStorage(ContentSelectionMode.storageKey) private var mode: ContentSelectionMode = .pickContent
+    @Environment(\.appLanguage) private var appLanguage
     @State private var isDropdownExpanded = false
     @State private var isMainHovered = false
     @State private var isChevronHovered = false
@@ -266,7 +269,16 @@ struct ContentSelectionButton: View {
     }
 
     private var buttonLabel: String {
-        hasActiveSelection ? "Change \(mode.label.split(separator: " ").last, default: "Content")..." : "\(mode.label)..."
+        switch mode {
+        case .pickContent:
+            hasActiveSelection
+                ? L10n.text("action.changeContent", language: appLanguage)
+                : L10n.text("action.selectContent", language: appLanguage)
+        case .selectArea:
+            hasActiveSelection
+                ? L10n.text("action.changeArea", language: appLanguage)
+                : L10n.text("action.selectArea", language: appLanguage)
+        }
     }
 
     var body: some View {
@@ -378,13 +390,14 @@ struct ContentSelectionButton: View {
 struct PermissionStatusBanner: View {
     let permissionService: PermissionService
     let showMicrophonePermission: Bool
+    @Environment(\.appLanguage) private var appLanguage
 
     var body: some View {
         VStack(spacing: 4) {
             HStack(spacing: 8) {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .foregroundStyle(.orange)
-                Text("Permissions Required")
+                Text(L10n.text("status.permissionsRequired", language: appLanguage))
                     .font(.system(size: 13, weight: .semibold))
                 Spacer()
             }
@@ -393,7 +406,7 @@ struct PermissionStatusBanner: View {
 
             if permissionService.screenRecordingState != .granted {
                 PermissionRow(
-                    title: "Screen Recording",
+                    title: L10n.text("status.screenRecording", language: appLanguage),
                     isGranted: false
                 ) {
                     permissionService.openScreenRecordingSettings()
@@ -402,7 +415,7 @@ struct PermissionStatusBanner: View {
 
             if showMicrophonePermission && permissionService.microphoneState != .granted {
                 PermissionRow(
-                    title: "Microphone",
+                    title: L10n.text("status.microphone", language: appLanguage),
                     isGranted: false
                 ) {
                     permissionService.openMicrophoneSettings()
@@ -418,6 +431,7 @@ struct PermissionRow: View {
     let title: String
     let isGranted: Bool
     let action: () -> Void
+    @Environment(\.appLanguage) private var appLanguage
     @State private var isHovered = false
 
     var body: some View {
@@ -434,7 +448,7 @@ struct PermissionRow: View {
                 Spacer()
 
                 if !isGranted {
-                    Text("Open Settings")
+                    Text(L10n.text("action.openSettings", language: appLanguage))
                         .font(.system(size: 11))
                         .foregroundStyle(.secondary)
                 }

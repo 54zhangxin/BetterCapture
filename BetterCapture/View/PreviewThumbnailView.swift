@@ -13,6 +13,7 @@ struct PreviewThumbnailView: View {
     let isLivePreviewActive: Bool
     let onStartLivePreview: () -> Void
     let onStopLivePreview: () -> Void
+    @Environment(\.appLanguage) private var appLanguage
 
     @State private var isHovered = false
 
@@ -76,7 +77,7 @@ struct PreviewThumbnailView: View {
                 VStack {
                     HStack {
                         Spacer()
-                        Text("LIVE")
+                        Text(L10n.text("status.live", language: appLanguage))
                             .font(.system(size: 9, weight: .bold))
                             .foregroundStyle(.white)
                             .padding(.horizontal, 6)

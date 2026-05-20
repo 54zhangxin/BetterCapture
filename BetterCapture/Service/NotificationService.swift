@@ -55,7 +55,7 @@ final class NotificationService: NSObject {
         // Action to show recording in Finder
         let showInFinderAction = UNNotificationAction(
             identifier: NotificationIdentifier.actionShowInFinder,
-            title: "Show in Finder",
+            title: L10n.text("notification.showInFinder"),
             options: [.foreground]
         )
 
@@ -101,8 +101,8 @@ final class NotificationService: NSObject {
     /// - Parameter fileURL: The URL of the saved recording file
     func sendRecordingSavedNotification(fileURL: URL) {
         let content = UNMutableNotificationContent()
-        content.title = "Recording Saved"
-        content.body = "Your recording has been saved to \(fileURL.lastPathComponent)"
+        content.title = L10n.text("notification.recordingSaved.title")
+        content.body = L10n.text("notification.recordingSaved.body", fileURL.lastPathComponent)
         content.sound = .default
         content.categoryIdentifier = NotificationIdentifier.categoryRecordingSaved
 
@@ -130,8 +130,8 @@ final class NotificationService: NSObject {
     /// - Parameter error: The error that caused the recording to fail
     func sendRecordingFailedNotification(error: Error) {
         let content = UNMutableNotificationContent()
-        content.title = "Recording Failed"
-        content.body = "Your recording could not be saved: \(error.localizedDescription)"
+        content.title = L10n.text("notification.recordingFailed.title")
+        content.body = L10n.text("notification.recordingFailed.body", error.localizedDescription)
         content.sound = .default
         content.categoryIdentifier = NotificationIdentifier.categoryRecordingFailed
 
@@ -155,12 +155,12 @@ final class NotificationService: NSObject {
     /// - Parameter error: Optional error that caused the stop
     func sendRecordingStoppedNotification(error: Error?) {
         let content = UNMutableNotificationContent()
-        content.title = "Recording Stopped"
+        content.title = L10n.text("notification.recordingStopped.title")
 
         if let error {
-            content.body = "Recording stopped unexpectedly: \(error.localizedDescription)"
+            content.body = L10n.text("notification.recordingStopped.bodyWithError", error.localizedDescription)
         } else {
-            content.body = "Recording stopped unexpectedly"
+            content.body = L10n.text("notification.recordingStopped.body")
         }
 
         content.sound = .default
@@ -213,9 +213,9 @@ extension NotificationService: UNUserNotificationCenterDelegate {
 
         switch response.actionIdentifier {
         case NotificationIdentifier.actionShowInFinder,
-            UNNotificationDefaultActionIdentifier where await categoryIdentifier == NotificationIdentifier.categoryRecordingSaved:
+            UNNotificationDefaultActionIdentifier where categoryIdentifier == NotificationIdentifier.categoryRecordingSaved:
             // User tapped the notification or the "Show in Finder" action
-            if let folderPath = await userInfo[UserInfoKey.folderURL] as? String {
+            if let folderPath = userInfo[UserInfoKey.folderURL] as? String {
                 await MainActor.run {
                     openFolderInFinder(path: folderPath)
                 }
